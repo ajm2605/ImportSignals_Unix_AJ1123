@@ -1,0 +1,29 @@
+%Mount EFS before getting started
+if isunix
+    command = 'sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 10.0.0.161:/ efs';
+    system(command);
+end
+
+%Useful Paths
+workingPath = '/home/ubuntu/Documents/dataOut/LN';
+dataPath = '/home/ubuntu/efs';
+
+dataDir = dir(dataPath)
+% Work here to include only LN/GR/SP data
+dataNames = {dataDir.names}
+dataPaths = fullfile(dataPath, dataNames);
+
+parfor i = 1:numel(dataNames)
+    curFolder = fullfile(dataPath, dataNames{i});
+    curSave = fullfile(workingPath, dataNames{i});
+
+    %exportNCS(curFolder, curSave);
+    sessionFlagNoise(curSave);
+    command = 'aws s3 sync /home/ubuntu/Documents/dataOut s3://matlabtestreceive';
+    status = system(command);
+    if status
+        rmdir(curSave, 'dir');
+    end
+end
+end
+
